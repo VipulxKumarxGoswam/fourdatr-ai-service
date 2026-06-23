@@ -1,4 +1,5 @@
-from fastapi import FastAPI
+import os
+
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
@@ -11,6 +12,9 @@ app = FastAPI(
     description="AI Backend for Variseocisk",
     version="1.0.0"
 )
+
+# Create outputs directory if it doesn't exist
+os.makedirs("outputs", exist_ok=True)
 
 # Serve generated images
 app.mount("/images", StaticFiles(directory="outputs"), name="images")
