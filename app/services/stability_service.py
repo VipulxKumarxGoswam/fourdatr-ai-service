@@ -1,44 +1,41 @@
 import os
 import time
-import requests
-from app.config import STABILITY_API_KEY
+
+from huggingface_hub import InferenceClient
+from app.config import HUGGINGFACE_API_KEY
 
 
 def generate_image(prompt: str):
 
-    url = "https://api.stability.ai/v2beta/stable-image/generate/core"
+    try:
 
-    headers = {
-        "Authorization": f"Bearer {STABILITY_API_KEY}",
-        "Accept": "image/*"
-    }
+        client = InferenceClient(
+            api_key=HUGGINGFACE_API_KEY
+        )
 
-    files = {
-        "prompt": (None, prompt),
-        "output_format": (None, "png")
-    }
+        image = client.text_to_image(
+            prompt=prompt,
+            model="black-forest-labs/FLUX.1-schnell"
+        )
 
-    response = requests.post(
-        url,
-        headers=headers,
-        files=files
-    )
+        # Create outputs folder
+        os.makedirs("outputs", exist_ok=True)
 
-    if response.status_code != 200:
-        raise Exception(response.text)
+        # Unique filename
+        filename = f"generated_{int(time.time())}.png"
 
-    # Create outputs folder if it doesn't exist
-    os.makedirs("outputs", exist_ok=True)
+        # Full path
+        image_path = os.path.join("outputs", filename)
 
-    # Generate unique filename using current timestamp
-    filename = f"generated_{int(time.time())}.png"
+        # Save image
+        image.save(image_path)
 
-    # Full file path
-    image_path = os.path.join("outputs", filename)
+        print("Image saved successfully:", image_path)
 
-    # Save image
-    with open(image_path, "wb") as f:
-        f.write(response.content)
+        return filename
 
-    # Return only the filename
-    return filename
+    except Exception as e:
+
+        print("IMAGE GENERATION ERROR:", str(e))
+
+        raise Exception(str(e))
